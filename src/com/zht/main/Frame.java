@@ -1,6 +1,7 @@
 package com.zht.main;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
@@ -15,10 +16,11 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import com.zht.entity.ShuInfo;
 import com.zht.url.UrlFactory;
 
 public class Frame extends JFrame{
@@ -34,10 +36,17 @@ public class Frame extends JFrame{
 	
 	final JLabel label = new JLabel();
 	
+	final JLabel validCode = new JLabel();
+	
 	private String cookie;
 	
 	private UrlFactory url = new UrlFactory();
 	
+	public ShuInfo shuInfo; 
+	
+	void setShuInfo(ShuInfo shu){
+		this.shuInfo = shu;
+	}
 	public Frame(){
 		init();
 		this.setLayout(new FlowLayout());
@@ -76,16 +85,16 @@ public class Frame extends JFrame{
 //		this.add(enter);
 		
 		final TextField user = new TextField();
-		user.setText("输入账号");
+		user.setText("04176106");
 		
 		final TextField pwd = new TextField();
-		pwd.setText("输入密码");
+		pwd.setText("02060");
 		this.add(user);
 		this.add(pwd);
 		
 		JButton submit = new JButton("登录");
+		
 		submit.addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -100,7 +109,37 @@ public class Frame extends JFrame{
 				loginParam.put("AjaxMethod", "LOGIN");
 				loginParam.put("Cookie", cookie);
 				try {
-					log.debug("登录结果--->"+url.login(loginParam));
+					//登录成功
+					String loginResult = url.login(loginParam);
+					log.debug("登录结果--->"+loginResult);
+					
+					//读取个人信息
+					String jsonShuInfo = url.userInfo(cookie,"jbxx");
+					log.debug("个人信息--->"+jsonShuInfo);
+					if(jsonShuInfo==null){
+						log.debug("获取信息失败");
+						return;
+					}
+					ObjectMapper mapper = new ObjectMapper();
+					ShuInfo shuInfo = mapper.readValue(jsonShuInfo, ShuInfo[].class)[0];
+					setShuInfo(shuInfo);
+					log.debug("name-->"+shuInfo.getFchrStudentName());
+					
+					validCode();
+					
+					//获取约车信息
+//					if(loginResult.equalsIgnoreCase("true")){
+//						Map<String, String> shuParam = new HashMap<String,String>();
+//						shuParam.put("loginType", "2");
+//						shuParam.put("method", "shu");
+//						shuParam.put("stuid", shuInfo.getFchrStudentID());
+//						shuParam.put("sfznum", "");
+//						shuParam.put("carid", "");
+//						shuParam.put("ValidCode", code.getText());
+//						shuParam.put("Cookie",cookie);
+//						log.debug("--->"+url.shuHdl(shuParam));
+//						
+//					}
 				} catch (Exception e2) {
 					log.debug("登录失败,出现异常");
 					e2.printStackTrace();
@@ -108,6 +147,40 @@ public class Frame extends JFrame{
 			}
 		});
 		this.add(submit);
+		this.add(validCode);
+		
+		final TextField queryCode = new TextField();
+		Dimension di = new Dimension();
+		di.height = 25;
+		di.width = 70;
+		queryCode.setPreferredSize(di);
+		this.add(queryCode);
+		
+		JButton query = new JButton("查询");
+		query.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				String vc = queryCode.getText();
+				ShuInfo sh = shuInfo;
+				Map<String,String> param = new HashMap<String, String>();
+//				param.put("loginType", "2");
+				param.put("stuid", sh.getFchrStudentID());
+				param.put("cartypeid", "01");
+				param.put("carid", "");
+				param.put("ValidCode", vc);
+				param.put("Cookie", cookie);
+				try {
+					String r = url.browser(param);
+					log.debug("约车情况-->"+r);
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
+				
+			}
+		});
+		this.add(query);
 	}
 	public void init(){
 		try {
@@ -127,4 +200,20 @@ public class Frame extends JFrame{
 		}
 	}
 	
+	public void validCode(){
+		try {
+			HttpResponse response = url.validCode();
+			InputStream input = response.getEntity().getContent();
+			byte[] data = new byte[(int) response.getEntity().getContentLength()];
+			input.read(data);
+			input.close();
+//			cookie = response.getLastHeader("Set-Cookie").getValue();
+//			log.debug("请求验证码Cookie--->"+cookie);
+			icon = new ImageIcon(data);
+			validCode.setText("查询验证码");
+			validCode.setIcon(icon);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
