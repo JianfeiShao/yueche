@@ -141,5 +141,43 @@ public class UrlFactory {
 		}
 		return EntityUtils.toString(response.getEntity(),Charset.forName("utf-8"));
 	}
-
+	
+	/**
+	 * Ô¼³µ
+	 */
+	public String yueche(Map<String,String> param) throws Exception{
+		CloseableHttpClient client = HttpClients.createDefault();
+		HttpPost yue = new HttpPost("http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx");
+		yue.setHeader("Cookie", param.get("Cookie"));
+		
+		List<NameValuePair> vnps = new ArrayList<NameValuePair>();
+		vnps.add(new BasicNameValuePair("loginType",param.get("loginType")));
+		vnps.add(new BasicNameValuePair("method",param.get("method")));
+		vnps.add(new BasicNameValuePair("stuid",param.get("stuid")));
+		vnps.add(new BasicNameValuePair("bmnum",param.get("bmnum")));
+		vnps.add(new BasicNameValuePair("start",param.get("start")));
+		vnps.add(new BasicNameValuePair("end",param.get("end")));
+		vnps.add(new BasicNameValuePair("lessionid",param.get("lessionid")));
+		vnps.add(new BasicNameValuePair("trainpriceid",param.get("trainpriceid")));
+		vnps.add(new BasicNameValuePair("lesstypeid",param.get("lesstypeid")));
+		vnps.add(new BasicNameValuePair("date",param.get("date")));
+		vnps.add(new BasicNameValuePair("id",param.get("id")));
+		vnps.add(new BasicNameValuePair("carid",param.get("carid")));
+		vnps.add(new BasicNameValuePair("ycmethod",param.get("ycmethod")));
+		vnps.add(new BasicNameValuePair("cartypeid",param.get("cartypeid")));
+		vnps.add(new BasicNameValuePair("trainsessionid",param.get("trainsessionid")));
+		vnps.add(new BasicNameValuePair("ReleaseCarID",param.get("ReleaseCarID")));
+		vnps.add(new BasicNameValuePair("ValidCode",param.get("ValidCode")));
+		yue.setEntity(new UrlEncodedFormEntity(vnps));
+		HttpResponse response = client.execute(yue);
+		return EntityUtils.toString(response.getEntity(),Charset.forName("utf-8"));
+	}
+//	http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx?
+//		loginType=2&method=yueche&stuid=04176106
+//		&bmnum=BD15041100587&start=7&end=9&lessionid=006
+//		&trainpriceid=BD13040300001
+//		&lesstypeid=02&date=2015-05-25&id=1&carid=
+//		&ycmethod=03&cartypeid=01&trainsessionid=01
+//		&ReleaseCarID=
+//		&ValidCode=xa5j
 }
