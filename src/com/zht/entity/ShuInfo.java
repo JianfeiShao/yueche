@@ -2,6 +2,11 @@ package com.zht.entity;
 
 import java.io.Serializable;
 
+/**
+ * 学生个人信息
+ * @author Administrator
+ *
+ */
 public class ShuInfo implements Serializable  {
 	
 	/**
@@ -9,7 +14,7 @@ public class ShuInfo implements Serializable  {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private String fchrStudentID;
+	private String fchrStudentID; //学号
 	private String fdtmRegistrationDate;
 	private String fchrStudentName;
 	private String fdtmBornDate;

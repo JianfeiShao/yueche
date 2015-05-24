@@ -29,7 +29,7 @@ public class UrlFactory {
 	private String loginUrl = "http://wsyc.dfss.com.cn/DfssAjax.aspx";
 
 	/**
-	 * ÑéÖ¤Âë
+	 * éªŒè¯ç 
 	 */
 	public HttpResponse validCode() throws Exception {
 		CloseableHttpClient client = HttpClients.createDefault();
@@ -40,14 +40,14 @@ public class UrlFactory {
 	}
 
 	/**
-	 * µÇÂ¼
+	 * ç™»å½•
 	 */
 	public String login(Map<String, String> param) throws Exception {
-		Asserts.notNull(param, "ÇëÇó²ÎÊı²»ÄÜ¿Õ");
+		Asserts.notNull(param, "è¯·æ±‚å‚æ•°ä¸èƒ½ç©º");
 
 		CloseableHttpClient client = HttpClients.createDefault();
 		
-		log.debug("µÇÂ¼url--->" + loginUrl);
+		log.debug("ç™»å½•url--->" + loginUrl);
 
 		HttpPost login = new HttpPost(loginUrl);
 
@@ -61,7 +61,7 @@ public class UrlFactory {
 		nvps.add(new BasicNameValuePair("ValidCode", param.get("ValidCode")));
 		login.setEntity(new UrlEncodedFormEntity(nvps));
 		
-		log.debug("ÇëÇó" + login.getURI());
+		log.debug("è¯·æ±‚" + login.getURI());
 		
 		HttpResponse response = client.execute(login);
 		int state = response.getStatusLine().getStatusCode();
@@ -74,7 +74,7 @@ public class UrlFactory {
 	}
 	
 	/**
-	 * »ñÈ¡¸öÈËĞÅÏ¢
+	 * è·å–ä¸ªäººä¿¡æ¯
 	 * @param cookie
 	 * @param string
 	 * @return
@@ -97,7 +97,7 @@ public class UrlFactory {
 	}
 	
 	/**
-	 * ¸öÈËÔ¼³µĞÅÏ¢
+	 * ä¸ªäººçº¦è½¦ä¿¡æ¯
 	 */
 	public String shuHdl(Map<String,String> param) throws Exception{
 //		loginType=2&method=stu&stuid=04176106&sfznum=&carid=&ValidCode=
@@ -123,7 +123,7 @@ public class UrlFactory {
 	}
 	
 	/**
-	 * ²é¿´Ô¼³µÇé¿ö
+	 * æŸ¥çœ‹çº¦è½¦æƒ…å†µ
 	 * @return
 	 */
 	public String browser(Map<String,String> param) throws Exception{
@@ -143,7 +143,7 @@ public class UrlFactory {
 	}
 	
 	/**
-	 * Ô¼³µ
+	 * çº¦è½¦
 	 */
 	public String yueche(Map<String,String> param) throws Exception{
 		CloseableHttpClient client = HttpClients.createDefault();

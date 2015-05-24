@@ -8,7 +8,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -53,7 +55,7 @@ public class Frame extends JFrame{
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setSize(300, 300);
 		
-		JButton button = new JButton("»»Ò»ÕÅ");
+		JButton button = new JButton("æ¢ä¸€å¼ ");
 		this.add(button, BorderLayout.WEST);
 		button.addActionListener(new ActionListener() {
 			
@@ -66,20 +68,20 @@ public class Frame extends JFrame{
 		this.add(label);
 		
 		final TextField code = new TextField();
-		code.setText("ÊäÈëÑéÖ¤Âë");
+		code.setText("è¾“å…¥éªŒè¯ç ");
 //		Dimension dimension = new Dimension();
 //		dimension.height = 20;
 //		dimension.width = 100;
 //		textCode.setPreferredSize(dimension);
 		this.add(code);
 		
-//		JButton enter = new JButton("È·ÈÏ");
+//		JButton enter = new JButton("ç¡®è®¤");
 //		enter.addActionListener(new ActionListener() {
 //			
 //			@Override
 //			public void actionPerformed(ActionEvent e) {
 //				// TODO Auto-generated method stub
-//				System.out.println("ÓĞ¶¯×÷");
+//				System.out.println("æœ‰åŠ¨ä½œ");
 //			}
 //		});
 //		this.add(enter);
@@ -92,15 +94,15 @@ public class Frame extends JFrame{
 		this.add(user);
 		this.add(pwd);
 		
-		JButton submit = new JButton("µÇÂ¼");
+		JButton submit = new JButton("ç™»å½•");
 		
 		submit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				log.debug("ÕËºÅ-->"+user.getText());
-				log.debug("ÃÜÂë-->"+pwd.getText());
-				log.debug("ÑéÖ¤Âë-->"+code.getText());
+				log.debug("è´¦å·-->"+user.getText());
+				log.debug("å¯†ç -->"+pwd.getText());
+				log.debug("éªŒè¯ç -->"+code.getText());
 				log.debug("Cookie-->"+cookie);
 				Map<String,String> loginParam = new HashMap<String, String>();
 				loginParam.put("Account", user.getText());
@@ -109,15 +111,15 @@ public class Frame extends JFrame{
 				loginParam.put("AjaxMethod", "LOGIN");
 				loginParam.put("Cookie", cookie);
 				try {
-					//µÇÂ¼³É¹¦
+					//ç™»å½•æˆåŠŸ
 					String loginResult = url.login(loginParam);
-					log.debug("µÇÂ¼½á¹û--->"+loginResult);
+					log.debug("ç™»å½•ç»“æœ--->"+loginResult);
 					
-					//¶ÁÈ¡¸öÈËĞÅÏ¢
+					//è¯»å–ä¸ªäººä¿¡æ¯
 					String jsonShuInfo = url.userInfo(cookie,"jbxx");
-					log.debug("¸öÈËĞÅÏ¢--->"+jsonShuInfo);
+					log.debug("ä¸ªäººä¿¡æ¯--->"+jsonShuInfo);
 					if(jsonShuInfo==null){
-						log.debug("»ñÈ¡ĞÅÏ¢Ê§°Ü");
+						log.debug("è·å–ä¿¡æ¯å¤±è´¥");
 						return;
 					}
 					ObjectMapper mapper = new ObjectMapper();
@@ -127,7 +129,7 @@ public class Frame extends JFrame{
 					
 					validCode();
 					
-					//»ñÈ¡Ô¼³µĞÅÏ¢
+					//è·å–çº¦è½¦ä¿¡æ¯
 //					if(loginResult.equalsIgnoreCase("true")){
 //						Map<String, String> shuParam = new HashMap<String,String>();
 //						shuParam.put("loginType", "2");
@@ -141,7 +143,7 @@ public class Frame extends JFrame{
 //						
 //					}
 				} catch (Exception e2) {
-					log.debug("µÇÂ¼Ê§°Ü,³öÏÖÒì³£");
+					log.debug("ç™»å½•å¤±è´¥,å‡ºç°å¼‚å¸¸");
 					e2.printStackTrace();
 				}
 			}
@@ -156,7 +158,7 @@ public class Frame extends JFrame{
 		queryCode.setPreferredSize(di);
 		this.add(queryCode);
 		
-		JButton query = new JButton("²éÑ¯");
+		JButton query = new JButton("æŸ¥è¯¢");
 		query.addActionListener(new ActionListener() {
 			
 			@Override
@@ -173,7 +175,46 @@ public class Frame extends JFrame{
 				param.put("Cookie", cookie);
 				try {
 					String r = url.browser(param);
-					log.debug("Ô¼³µÇé¿ö-->"+r);
+					log.debug("çº¦è½¦æƒ…å†µ-->"+r);
+					String[] yuecheInfo = r.split("\\|\\|");
+					log.debug("çº¦è½¦æƒ…å†µ--->"+yuecheInfo[2]);
+					if(yuecheInfo.length!=3){
+						log.debug("ç»“æœæœ‰è¯¯");
+						return ;
+					}
+					
+					Map<String,Set<String>> date = appoint();
+					Set<String> userDateSet = date.keySet();
+					
+					//çº¦è½¦ä¿¡æ¯
+					ObjectMapper mapper = new ObjectMapper();
+					Map<String,String>[] carResult = mapper.readValue(yuecheInfo[2], Map[].class);
+					for (Map<String, String> map : carResult) {
+//						Set<Entry<String, String>> set = map.entrySet();
+						String sDate = map.get("fchrdate");
+						if(userDateSet.contains(sDate)){
+							//ç”¨æˆ·æŒ‡å®šæ—¶é—´
+							Set<String> userTimeSet = date.get(sDate);
+							for (String str : userTimeSet) {
+								String yueCheId = map.get(str);
+								log.debug("çº¦è½¦---->"+yueCheId);
+								if(!yueCheId.split("\\/")[1].equalsIgnoreCase("0")){
+									log.debug("æ²¡è½¦"+sDate+"--->"+str);
+								};
+							}
+						}
+//						for (Entry<String, String> entry : set) {
+//							log.debug(entry.getKey()+":"+entry.getValue());
+							//æ˜¯å¦å­˜åœ¨ç”¨æˆ·æŒ‡å®šæ—¥æœŸ
+//							if(userDateSet.contains(entry.getValue())){
+								//å–å‡ºç”¨æˆ·æ—¶é—´æ¯”è¾ƒ
+//								Set<Integer> userTimeSet =  date.get(entry.getValue());
+//								continue;
+//							}
+//							break;
+//						}
+					}
+					
 				} catch (Exception e2) {
 					e2.printStackTrace();
 				}
@@ -191,9 +232,9 @@ public class Frame extends JFrame{
 			input.read(data);
 			input.close();
 			cookie = response.getLastHeader("Set-Cookie").getValue();
-			log.debug("ÇëÇóÑéÖ¤ÂëCookie--->"+cookie);
+			log.debug("è¯·æ±‚éªŒè¯ç Cookie--->"+cookie);
 			icon = new ImageIcon(data);
-			label.setText("ÑéÖ¤Âë");
+			label.setText("éªŒè¯ç ");
 			label.setIcon(icon);
 		} catch (Exception e2) {
 			e2.printStackTrace();
@@ -208,12 +249,22 @@ public class Frame extends JFrame{
 			input.read(data);
 			input.close();
 //			cookie = response.getLastHeader("Set-Cookie").getValue();
-//			log.debug("ÇëÇóÑéÖ¤ÂëCookie--->"+cookie);
+//			log.debug("è¯·æ±‚éªŒè¯ç Cookie--->"+cookie);
 			icon = new ImageIcon(data);
-			validCode.setText("²éÑ¯ÑéÖ¤Âë");
+			validCode.setText("æŸ¥è¯¢éªŒè¯ç ");
 			validCode.setIcon(icon);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public Map<String,Set<String>> appoint(){
+		//è·å–ç”¨æˆ·æŒ‡å®šæ—¶é—´
+		Map<String,Set<String>> date = new HashMap<String, Set<String>>();
+		Set<String> time = new HashSet<String>();
+		time.add("1");//7-9
+		time.add("2");//9-13
+		date.put("2015-05-28(æ˜ŸæœŸå››)", time);
+		return date;
 	}
 }
