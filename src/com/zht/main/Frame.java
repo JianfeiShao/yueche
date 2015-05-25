@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.Icon;
@@ -22,7 +23,9 @@ import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.zht.entity.ShuInfo;
+import com.zht.entity.Stu;
+import com.zht.entity.StuInfo;
+import com.zht.url.ThreadPool;
 import com.zht.url.UrlFactory;
 
 public class Frame extends JFrame{
@@ -44,11 +47,10 @@ public class Frame extends JFrame{
 	
 	private UrlFactory url = new UrlFactory();
 	
-	public ShuInfo shuInfo; 
+	public Stu stu; 
 	
-	void setShuInfo(ShuInfo shu){
-		this.shuInfo = shu;
-	}
+	public StuInfo stuInfo;
+	
 	public Frame(){
 		init();
 		this.setLayout(new FlowLayout());
@@ -116,32 +118,83 @@ public class Frame extends JFrame{
 					log.debug("登录结果--->"+loginResult);
 					
 					//读取个人信息
-					String jsonShuInfo = url.userInfo(cookie,"jbxx");
-					log.debug("个人信息--->"+jsonShuInfo);
-					if(jsonShuInfo==null){
+					String jsonStuInfo = url.userInfo(cookie,"jbxx");
+					log.debug("个人信息--->"+jsonStuInfo);
+					if(jsonStuInfo==null){
 						log.debug("获取信息失败");
 						return;
 					}
 					ObjectMapper mapper = new ObjectMapper();
-					ShuInfo shuInfo = mapper.readValue(jsonShuInfo, ShuInfo[].class)[0];
-					setShuInfo(shuInfo);
-					log.debug("name-->"+shuInfo.getFchrStudentName());
+					stu = mapper.readValue(jsonStuInfo, Stu[].class)[0];
+					log.debug("name-->"+stu.getFchrStudentName());
 					
+					//刷新查询验证码
 					validCode();
 					
-					//获取约车信息
-//					if(loginResult.equalsIgnoreCase("true")){
-//						Map<String, String> shuParam = new HashMap<String,String>();
-//						shuParam.put("loginType", "2");
-//						shuParam.put("method", "shu");
-//						shuParam.put("stuid", shuInfo.getFchrStudentID());
-//						shuParam.put("sfznum", "");
-//						shuParam.put("carid", "");
-//						shuParam.put("ValidCode", code.getText());
-//						shuParam.put("Cookie",cookie);
-//						log.debug("--->"+url.shuHdl(shuParam));
-//						
-//					}
+					//获取个人约车信息
+					if(loginResult.equalsIgnoreCase("true")){
+						Map<String, String> shuParam = new HashMap<String,String>();
+						shuParam.put("loginType", "2");
+						shuParam.put("method", "stu");
+						shuParam.put("stuid", stu.getFchrStudentID());
+						shuParam.put("sfznum", "");
+						shuParam.put("carid", "");
+						shuParam.put("ValidCode", code.getText());
+						shuParam.put("Cookie",cookie);
+						String stuArray = url.stuHdl(shuParam);
+						log.debug("个人约车信息--->"+stuArray);
+						String[] stuAr= stuArray.split("\\|\\|\\|\\|");
+						log.debug(stuAr.length);
+						//这里是个人约车信息(SOAP)
+//						mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+						stuInfo = mapper.readValue(stuAr[0], StuInfo[].class)[0];
+						//个人约车结果(Map方式)这里需要grid UI
+						Map<String,String>[] stuInfoMap = mapper.readValue(stuAr[1], Map[].class);
+						
+						log.debug("Map-->"+stuInfoMap.length);
+						
+						Map<String,String> yueCheParam = new HashMap<String, String>();
+						yueCheParam.put("loginType", "2");
+						yueCheParam.put("method", "yueche");
+						yueCheParam.put("stuid", stuInfo.getFchrStudentID());
+						yueCheParam.put("bmnum", stuInfo.getFchrRegistrationID());
+						yueCheParam.put("start", "13");//开始时间
+						yueCheParam.put("end", "17");//结束时间
+						yueCheParam.put("lessionid", stuInfo.getFchrLessonID());
+						yueCheParam.put("trainpriceid", stuInfo.getFchrTrainPriceID());
+						yueCheParam.put("lesstypeid", stuInfo.getFchrLessonTypeID());//约车类型？
+						yueCheParam.put("date", "2015-05-26");//约车日期
+						yueCheParam.put("id", "1");//固定值
+						yueCheParam.put("carid", "");
+						yueCheParam.put("ycmethod", "03");//约车方法？
+						yueCheParam.put("cartypeid", stuInfo.getFchrCarTypeID());
+						yueCheParam.put("trainsessionid", "03"); //课程时段ID     和上面 时间 对比成立
+						yueCheParam.put("ReleaseCarID", "");
+						yueCheParam.put("ValidCode", code.getText());
+						yueCheParam.put("Cookie", cookie);
+//						Map<String,String> app = appoint();
+//						for (int i = 0; i < app.size(); i++) {
+						Set<Entry<String, Set<String>>> userAppoint = appoint().entrySet();
+						int threadCount = 0;
+						for (Entry<String, Set<String>> entry : userAppoint) {
+							log.debug(entry.getKey()+":"+entry.getValue());
+							Set<String> t = entry.getValue();
+							for (String str : t) {
+								String[] s = str.split(",");
+								yueCheParam.put("date", entry.getKey());
+								yueCheParam.put("start", s[1].split("-")[0]);//开始时间
+								yueCheParam.put("end", s[1].split("-")[1]);//结束时间
+								yueCheParam.put("trainsessionid", s[0]);
+								log.debug("是否有循环");
+								ThreadPool tp = new ThreadPool(yueCheParam, threadCount++);
+								tp.start();
+							}
+						}
+//						while(true){
+//							System.out.println("约车结果-------->"+url.yueche(yueCheParam));
+//						}
+					}
+					
 				} catch (Exception e2) {
 					log.debug("登录失败,出现异常");
 					e2.printStackTrace();
@@ -149,7 +202,7 @@ public class Frame extends JFrame{
 			}
 		});
 		this.add(submit);
-		this.add(validCode);
+//		this.add(validCode);//上面验证码只需请求即可不用显示
 		
 		final TextField queryCode = new TextField();
 		Dimension di = new Dimension();
@@ -165,10 +218,9 @@ public class Frame extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				String vc = queryCode.getText();
-				ShuInfo sh = shuInfo;
 				Map<String,String> param = new HashMap<String, String>();
 //				param.put("loginType", "2");
-				param.put("stuid", sh.getFchrStudentID());
+				param.put("stuid", stu.getFchrStudentID());
 				param.put("cartypeid", "01");
 				param.put("carid", "");
 				param.put("ValidCode", vc);
@@ -183,7 +235,7 @@ public class Frame extends JFrame{
 						return ;
 					}
 					
-					Map<String,Set<String>> date = appoint();
+					Map<String,Set<String>> date = null;//appoint();
 					Set<String> userDateSet = date.keySet();
 					
 					//约车信息
@@ -262,9 +314,11 @@ public class Frame extends JFrame{
 		//获取用户指定时间
 		Map<String,Set<String>> date = new HashMap<String, Set<String>>();
 		Set<String> time = new HashSet<String>();
-		time.add("1");//7-9
-		time.add("2");//9-13
-		date.put("2015-05-28(星期四)", time);
+		time.add("02,9-13");
+		time.add("03,13-17");
+		time.add("04,17-19");
+		time.add("05,19-21");
+		date.put("2015-05-31", time);
 		return date;
 	}
 }

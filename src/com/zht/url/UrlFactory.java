@@ -5,22 +5,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ClientConnectionRequest;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.HttpParams;
 import org.apache.http.util.Asserts;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
-
-import com.sun.net.httpserver.Headers;
 
 public class UrlFactory {
 
@@ -46,7 +42,7 @@ public class UrlFactory {
 		Asserts.notNull(param, "请求参数不能空");
 
 		CloseableHttpClient client = HttpClients.createDefault();
-		
+
 		log.debug("登录url--->" + loginUrl);
 
 		HttpPost login = new HttpPost(loginUrl);
@@ -60,52 +56,56 @@ public class UrlFactory {
 		nvps.add(new BasicNameValuePair("Pwd", param.get("Pwd")));
 		nvps.add(new BasicNameValuePair("ValidCode", param.get("ValidCode")));
 		login.setEntity(new UrlEncodedFormEntity(nvps));
-		
+
 		log.debug("请求" + login.getURI());
-		
+
 		HttpResponse response = client.execute(login);
 		int state = response.getStatusLine().getStatusCode();
-		if(state != 200){
+		if (state != 200) {
 			return null;
 		}
-		
+
 		return EntityUtils.toString(response.getEntity(),
 				Charset.forName("utf-8"));
 	}
-	
+
 	/**
 	 * 获取个人信息
+	 * 
 	 * @param cookie
 	 * @param string
 	 * @return
 	 */
-	public String userInfo(String cookie, String ajaxMethod) throws Exception{
+	public String userInfo(String cookie, String ajaxMethod) throws Exception {
 		// TODO Auto-generated method stub
-		//http://wsyc.dfss.com.cn/DfssAjax.aspx
+		// http://wsyc.dfss.com.cn/DfssAjax.aspx
 		CloseableHttpClient client = HttpClients.createDefault();
-		HttpPost userInfo = new HttpPost("http://wsyc.dfss.com.cn/DfssAjax.aspx");
+		HttpPost userInfo = new HttpPost(
+				"http://wsyc.dfss.com.cn/DfssAjax.aspx");
 		userInfo.setHeader("Cookie", cookie);
 		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
 		nvps.add(new BasicNameValuePair("AjaxMethod", ajaxMethod));
 		userInfo.setEntity(new UrlEncodedFormEntity(nvps));
 		HttpResponse response = client.execute(userInfo);
 		int state = response.getStatusLine().getStatusCode();
-		if(state != 200){
+		String result = EntityUtils.toString(response.getEntity(),Charset.forName("utf-8"));
+		if (state != 200) {
+			log.debug(result);
 			return null;
 		}
-		return EntityUtils.toString(response.getEntity(),Charset.forName("utf-8"));
+		return result;
 	}
-	
+
 	/**
-	 * 个人约车信息
+	 * 个人约车信息,里面有令牌
 	 */
-	public String shuHdl(Map<String,String> param) throws Exception{
-//		loginType=2&method=stu&stuid=04176106&sfznum=&carid=&ValidCode=
+	public String stuHdl(Map<String, String> param) throws Exception {
+		// loginType=2&method=stu&stuid=04176106&sfznum=&carid=&ValidCode=
 		CloseableHttpClient client = HttpClients.createDefault();
-		
-		HttpPost shu = new HttpPost("http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx");
-		shu.setHeader("Cookie", param.get("Cookie"));
-		
+
+		HttpPost stu = new HttpPost("http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx");
+		stu.setHeader("Cookie", param.get("Cookie"));
+
 		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
 		nvps.add(new BasicNameValuePair("loginType", param.get("loginType")));
 		nvps.add(new BasicNameValuePair("method", param.get("method")));
@@ -113,71 +113,83 @@ public class UrlFactory {
 		nvps.add(new BasicNameValuePair("sfznum", param.get("sfznum")));
 		nvps.add(new BasicNameValuePair("carid", param.get("carid")));
 		nvps.add(new BasicNameValuePair("ValidCode", param.get("ValidCode")));
-		shu.setEntity(new UrlEncodedFormEntity(nvps));
-		HttpResponse response = client.execute(shu);
+		
+//		MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+//		builder.addTextBody("loginType", param.get("loginType"));
+//		builder.addTextBody("method", param.get("method"));
+//		builder.addTextBody("stuid", param.get("stuid"));
+//		builder.addTextBody("sfznum", param.get("sfznum"));
+//		builder.addTextBody("carid", param.get("carid"));
+//		builder.addTextBody("ValidCode", param.get("ValidCode"));
+		
+		stu.setEntity(new UrlEncodedFormEntity(nvps));
+		
+//		shu.setEntity(builder.build());
+		HttpResponse response = client.execute(stu);
 		int state = response.getStatusLine().getStatusCode();
-		if(state != 200){
+		if (state != 200) {
 			return null;
 		}
-		return EntityUtils.toString(response.getEntity(),Charset.forName("utf-8"));
+		return EntityUtils.toString(response.getEntity(),
+				Charset.forName("utf-8"));
 	}
-	
+
 	/**
 	 * 查看约车情况
+	 * 
 	 * @return
 	 */
-	public String browser(Map<String,String> param) throws Exception{
-		String url = "http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx?" +
-				"loginType=2&method=Browser&stuid="+param.get("stuid")+"&lessonid=001" +
-				"&cartypeid="+param.get("cartypeid")+"&carid=&ValidCode="+param.get("ValidCode")+"&t=130766557521239846";
+	public String browser(Map<String, String> param) throws Exception {
+		String url = "http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx?"
+				+ "loginType=2&method=Browser&stuid=" + param.get("stuid")
+				+ "&lessonid=001" + "&cartypeid=" + param.get("cartypeid")
+				+ "&carid=&ValidCode=" + param.get("ValidCode")
+				+ "&t=130766557521239846";
 		CloseableHttpClient client = HttpClients.createDefault();
 		HttpGet br = new HttpGet(url);
-		
+
 		br.setHeader("Cookie", param.get("Cookie"));
-		
+
 		HttpResponse response = client.execute(br);
-		if(response.getStatusLine().getStatusCode()!=200){
+		if (response.getStatusLine().getStatusCode() != 200) {
 			return null;
 		}
-		return EntityUtils.toString(response.getEntity(),Charset.forName("utf-8"));
+		return EntityUtils.toString(response.getEntity(),
+				Charset.forName("utf-8"));
 	}
-	
+
 	/**
 	 * 约车
 	 */
-	public String yueche(Map<String,String> param) throws Exception{
+	public String yueche(Map<String, String> param) throws Exception {
+		log.debug("正在约车!!!");
 		CloseableHttpClient client = HttpClients.createDefault();
 		HttpPost yue = new HttpPost("http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx");
 		yue.setHeader("Cookie", param.get("Cookie"));
-		
 		List<NameValuePair> vnps = new ArrayList<NameValuePair>();
-		vnps.add(new BasicNameValuePair("loginType",param.get("loginType")));
-		vnps.add(new BasicNameValuePair("method",param.get("method")));
-		vnps.add(new BasicNameValuePair("stuid",param.get("stuid")));
-		vnps.add(new BasicNameValuePair("bmnum",param.get("bmnum")));
-		vnps.add(new BasicNameValuePair("start",param.get("start")));
-		vnps.add(new BasicNameValuePair("end",param.get("end")));
-		vnps.add(new BasicNameValuePair("lessionid",param.get("lessionid")));
-		vnps.add(new BasicNameValuePair("trainpriceid",param.get("trainpriceid")));
-		vnps.add(new BasicNameValuePair("lesstypeid",param.get("lesstypeid")));
-		vnps.add(new BasicNameValuePair("date",param.get("date")));
-		vnps.add(new BasicNameValuePair("id",param.get("id")));
-		vnps.add(new BasicNameValuePair("carid",param.get("carid")));
-		vnps.add(new BasicNameValuePair("ycmethod",param.get("ycmethod")));
-		vnps.add(new BasicNameValuePair("cartypeid",param.get("cartypeid")));
-		vnps.add(new BasicNameValuePair("trainsessionid",param.get("trainsessionid")));
-		vnps.add(new BasicNameValuePair("ReleaseCarID",param.get("ReleaseCarID")));
-		vnps.add(new BasicNameValuePair("ValidCode",param.get("ValidCode")));
+		vnps.add(new BasicNameValuePair("loginType", param.get("loginType")));
+		vnps.add(new BasicNameValuePair("method", param.get("method")));
+		vnps.add(new BasicNameValuePair("stuid", param.get("stuid")));
+		vnps.add(new BasicNameValuePair("bmnum", param.get("bmnum")));
+		vnps.add(new BasicNameValuePair("start", param.get("start")));
+		vnps.add(new BasicNameValuePair("end", param.get("end")));
+		vnps.add(new BasicNameValuePair("lessionid", param.get("lessionid")));
+		vnps.add(new BasicNameValuePair("trainpriceid", param.get("trainpriceid")));
+		vnps.add(new BasicNameValuePair("lesstypeid", param.get("lesstypeid")));
+		vnps.add(new BasicNameValuePair("date", param.get("date")));
+		vnps.add(new BasicNameValuePair("id", param.get("id")));
+		vnps.add(new BasicNameValuePair("carid", param.get("carid")));
+		vnps.add(new BasicNameValuePair("ycmethod", param.get("ycmethod")));
+		vnps.add(new BasicNameValuePair("cartypeid", param.get("cartypeid")));
+		vnps.add(new BasicNameValuePair("trainsessionid", param.get("trainsessionid")));
+		vnps.add(new BasicNameValuePair("ReleaseCarID", param.get("ReleaseCarID")));
+		vnps.add(new BasicNameValuePair("ValidCode", param.get("ValidCode")));
 		yue.setEntity(new UrlEncodedFormEntity(vnps));
 		HttpResponse response = client.execute(yue);
-		return EntityUtils.toString(response.getEntity(),Charset.forName("utf-8"));
+		if(response.getStatusLine().getStatusCode() != 200){
+			return null;
+		}
+		return EntityUtils.toString(response.getEntity(),
+				Charset.forName("utf-8"));
 	}
-//	http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx?
-//		loginType=2&method=yueche&stuid=04176106
-//		&bmnum=BD15041100587&start=7&end=9&lessionid=006
-//		&trainpriceid=BD13040300001
-//		&lesstypeid=02&date=2015-05-25&id=1&carid=
-//		&ycmethod=03&cartypeid=01&trainsessionid=01
-//		&ReleaseCarID=
-//		&ValidCode=xa5j
 }

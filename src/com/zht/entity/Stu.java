@@ -3,11 +3,11 @@ package com.zht.entity;
 import java.io.Serializable;
 
 /**
- * 学生个人信息
+ * 学生基本信息
  * @author Administrator
  *
  */
-public class ShuInfo implements Serializable  {
+public class Stu implements Serializable  {
 	
 	/**
 	 * 
