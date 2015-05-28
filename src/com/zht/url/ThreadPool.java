@@ -31,7 +31,7 @@ public class ThreadPool extends Thread {
 				log.debug("线程("+count+")运行,约车结果--->"+yue);
 			}
 		} catch (Exception e) {
-			log.debug("线程,约车,出现错误！！");
+			log.debug("线程,约车,出现错误！！",e);
 			e.printStackTrace();
 		}
 	}

@@ -143,8 +143,7 @@ public class UrlFactory {
 		String url = "http://wsyc.dfss.com.cn/Ajax/StuHdl.ashx?"
 				+ "loginType=2&method=Browser&stuid=" + param.get("stuid")
 				+ "&lessonid=001" + "&cartypeid=" + param.get("cartypeid")
-				+ "&carid=&ValidCode=" + param.get("ValidCode")
-				+ "&t=130766557521239846";
+				+ "&carid=&ValidCode=" + param.get("ValidCode");
 		CloseableHttpClient client = HttpClients.createDefault();
 		HttpGet br = new HttpGet(url);
 
