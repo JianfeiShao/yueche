@@ -1,7 +1,6 @@
 package com.zht.main;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
@@ -9,8 +8,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,11 +23,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JTable;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
-import javax.swing.table.TableColumnModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableColumn;
 
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -58,37 +60,57 @@ public class Frame extends JFrame {
 
 	TextField code = new TextField();
 
-	TextField queryCode = new TextField();
-
+//	TextField queryCode = new TextField();
+	
 	ObjectMapper mapper = new ObjectMapper();
 	
 	public Frame() {
-		
-		String[][] rowData = new String[6][6];
+		List<String> date = getDate();
+		log.debug(date.size());
+		String[][] rowData = new String[6][8];
 		rowData[0][0] = "日期";
-		rowData[0][1] = "星期一";
-		rowData[0][2] = "星期二";
-		rowData[0][3] = "星期三";
-		rowData[0][4] = "星期四";
-		rowData[0][5] = "星期五";
+		//行
+		rowData[0][1] = date.get(0);
+		rowData[0][2] = date.get(1);
+		rowData[0][3] = date.get(2);
+		rowData[0][4] = date.get(3);
+		rowData[0][5] = date.get(4);
+		rowData[0][6] = date.get(5);
+		rowData[0][7] = date.get(6);
+		//列
+		rowData[1][0] = "7-9";
+		rowData[2][0] = "9-13";
+		rowData[3][0] = "13-17";
+		rowData[4][0] = "17-19";
+		rowData[5][0] = "19-21";
+		for(int i=1;i<rowData.length;i++){
+			String[] er = rowData[i];
+			for (int j = 1; j < er.length; j++) {
+				rowData[i][j] = "需要";
+			}
+		}
 		
-		rowData[1][0] = "2015-05-19";
-		rowData[2][0] = "2015-05-20";
-		rowData[3][0] = "2015-05-21";
-		rowData[4][0] = "2015-05-22";
-		rowData[5][0] = "2015-05-23";
-		
-		String[] columnNames = new String[5];
-		columnNames[0] = "2015-05-19";
-		columnNames[1] = "2015-05-20";
-		columnNames[2] = "2015-05-21";
-		columnNames[3] = "2015-05-22";
-		columnNames[4] = "2015-05-23";
+		String[] columnNames = new String[8];
+		columnNames[0]="";
+		columnNames[1]="7-9";
+		columnNames[2]="9-13";
+		columnNames[3]="13-17";
+		columnNames[4]="17-19";
+		columnNames[5]="19-21";
+		columnNames[6]="";
+		columnNames[7]="";
 		
 		final JTable table = new JTable(rowData,columnNames);
-		
+		table.getColumnModel().getColumn(0).setPreferredWidth(90);
+		table.getColumnModel().getColumn(1).setPreferredWidth(90);
+		table.getColumnModel().getColumn(2).setPreferredWidth(90);
+		table.getColumnModel().getColumn(3).setPreferredWidth(90);
+		table.getColumnModel().getColumn(4).setPreferredWidth(90);
+		table.getColumnModel().getColumn(5).setPreferredWidth(90);
+		table.getColumnModel().getColumn(6).setPreferredWidth(90);
+		table.getColumnModel().getColumn(7).setPreferredWidth(90);
+//		FitTableColumns(table);
 		this.add(table);
-		
 		table.addMouseListener(new MouseListener() {
 			
 			@Override
@@ -118,18 +140,16 @@ public class Frame extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				// TODO Auto-generated method stub
-				log.debug("选中行-->"+table.getSelectedRowCount());
+				log.debug("选中行-->"+table.getSelectedRow());
 				int[] a = table.getSelectedRows();
-				log.debug(a.length);
-				log.debug(a[0]);
-				
-//				log.debug(table.getRowCount());
-				log.debug(table.getColumnName(a[0]+1));
+//				log.debug(a.length);
+				log.debug("行--->"+a[0]);
+				log.debug("行值"+table.getColumnName(a[0]));
 				
 			}
 		});
 		
-		init();
+//		init();
 		this.setLayout(new FlowLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setSize(300, 300);
@@ -228,11 +248,11 @@ public class Frame extends JFrame {
 		this.add(submit);
 		// this.add(validCode);//上面验证码只需请求即可不用显示
 
-		Dimension di = new Dimension();
-		di.height = 25;
-		di.width = 70;
-		queryCode.setPreferredSize(di);
-		this.add(queryCode);
+//		Dimension di = new Dimension();
+//		di.height = 25;
+//		di.width = 70;
+//		queryCode.setPreferredSize(di);
+//		this.add(queryCode);
 
 	}
 
@@ -465,5 +485,39 @@ public class Frame extends JFrame {
 		
 //		ThreadPool tp = new ThreadPool(yueCheParam, threadCount++);
 //		tp.start();
+	}
+	
+	public List<String> getDate(){
+		List<String> list = new ArrayList<String>();
+		for (int i = 0; i <= 6; i++) {
+			Calendar cal = Calendar.getInstance();
+			int day = cal.get(Calendar.DAY_OF_MONTH);
+//			cal.add(Calendar.DATE, i);
+			cal.set(Calendar.DAY_OF_MONTH,day+i );
+			SimpleDateFormat dateFm = new SimpleDateFormat("MM-dd(EEEE)");
+			list.add(dateFm.format(cal.getTime()));
+		}
+		return list;
+	}
+	
+	public void FitTableColumns(JTable myTable){
+		  JTableHeader header = myTable.getTableHeader();
+		     int rowCount = myTable.getRowCount();
+
+		     Enumeration columns = myTable.getColumnModel().getColumns();
+		     while(columns.hasMoreElements()){
+		         TableColumn column = (TableColumn)columns.nextElement();
+		         int col = header.getColumnModel().getColumnIndex(column.getIdentifier());
+		         int width = (int)myTable.getTableHeader().getDefaultRenderer()
+		                 .getTableCellRendererComponent(myTable, column.getIdentifier()
+		                         , false, false, -1, col).getPreferredSize().getWidth();
+		         for(int row = 0; row<rowCount; row++){
+		             int preferedWidth = (int)myTable.getCellRenderer(row, col).getTableCellRendererComponent(myTable,
+		               myTable.getValueAt(row, col), false, false, row, col).getPreferredSize().getWidth();
+		             width = Math.max(width, preferedWidth);
+		         }
+		         header.setResizingColumn(column); // 此行很重要
+		         column.setWidth(width+myTable.getIntercellSpacing().width);
+		     }
 	}
 }

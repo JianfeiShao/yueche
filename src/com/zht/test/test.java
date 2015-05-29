@@ -1,13 +1,17 @@
 package com.zht.test;
 
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -119,7 +123,7 @@ public class test {
 			log.debug("走动");
 		}
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -133,11 +137,63 @@ public class test {
 			HttpResponse response = client.execute(br);
 			String r = EntityUtils.toString(response.getEntity(),
 					Charset.forName("utf-8"));
-			log.debug("结果"+r);
+			log.debug("结果" + r);
 			String[] yuecheArray = r.split("\\|\\|");
 
 			log.error("约车情况--->" + yuecheArray[2]);
 		}
+	}
+
+	@Test
+	public void date() {
+		// System.out.println(cal.get(Calendar.YEAR));
+		// System.out.println(cal.get(Calendar.MONDAY));
+		// System.out.println(cal.get(Calendar.DATE));
+		// Date d = new Date(30);
+		// cal.set(2015, 05, 30);
+//		System.out.println(cal.get(Calendar.DAY_OF_WEEK) - 1);
+		for (int i = 0; i <= 6; i++) {
+			Calendar cal = Calendar.getInstance();
+			int day = cal.get(Calendar.DAY_OF_MONTH);
+//			cal.add(Calendar.DATE, i);
+			cal.set(Calendar.DAY_OF_MONTH,day+i );
+			SimpleDateFormat dateFm = new SimpleDateFormat("yyyy-MM-dd(EEEE)");
+			System.out.println(dateFm.format(cal.getTime()));
+		}
+
+		// DateFormat df = DateFormat.getDateTimeInstance(DateFormat.FULL, 0);
+		// String date = df.format(new Date());
+		// System.out.println(date);
+	}
+	
+	@Test
+	public void arrayTest(){
+		String[][] t = new String[2][7];
+		log.debug(t.length);
+		for (int i = 0; i < t.length; i++) {
+			log.debug(t[i].length);
+		}
+	}
+	
+	public static void main(String a[]){
+		JFrame frame = new JFrame();
+		frame.setSize(500, 500);
+		
+		String[][] row = new String[5][3];
+		row[0][0]="00";
+		row[0][1]="01";
+		row[0][2]="02";
+		row[1][1]="11";
+		
+		String[] column = new String[3];
+		column[0]="0";
+		column[1]="1";
+		column[2]="2";
+		
+		JTable table = new JTable(row,column);
+		frame.add(table);
+		frame.setVisible(true);
+		
 	}
 
 }
