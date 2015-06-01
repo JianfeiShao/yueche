@@ -23,9 +23,12 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
@@ -33,6 +36,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import com.zht.entity.Stu;
 import com.zht.entity.StuInfo;
+import com.zht.froms.Jtable;
 import com.zht.url.UrlFactory;
 
 public class Frame extends JFrame {
@@ -64,19 +68,25 @@ public class Frame extends JFrame {
 	
 	ObjectMapper mapper = new ObjectMapper();
 	
+	List<String> sysDate = getDate();
+	
+	Map<String, Set<String>> userDate = new HashMap<String, Set<String>>();
+	
 	public Frame() {
-		List<String> date = getDate();
-		log.debug(date.size());
-		String[][] rowData = new String[6][8];
+		log.debug(sysDate.size());
+		//填充表现
+		final String[][] rowData = new String[6][8];
 		rowData[0][0] = "日期";
 		//行
-		rowData[0][1] = date.get(0);
-		rowData[0][2] = date.get(1);
-		rowData[0][3] = date.get(2);
-		rowData[0][4] = date.get(3);
-		rowData[0][5] = date.get(4);
-		rowData[0][6] = date.get(5);
-		rowData[0][7] = date.get(6);
+		for (int i = 1; i <= sysDate.size(); i++) {
+			rowData[0][i] = sysDate.get(i-1);
+		}
+//		rowData[0][2] = date.get(1);
+//		rowData[0][3] = date.get(2);
+//		rowData[0][4] = date.get(3);
+//		rowData[0][5] = date.get(4);
+//		rowData[0][6] = date.get(5);
+//		rowData[0][7] = date.get(6);
 		//列
 		rowData[1][0] = "7-9";
 		rowData[2][0] = "9-13";
@@ -86,31 +96,28 @@ public class Frame extends JFrame {
 		for(int i=1;i<rowData.length;i++){
 			String[] er = rowData[i];
 			for (int j = 1; j < er.length; j++) {
-				rowData[i][j] = "需要";
+				rowData[i][j] = "不需要";
 			}
 		}
-		
+		//填充存储
 		String[] columnNames = new String[8];
 		columnNames[0]="";
-		columnNames[1]="7-9";
-		columnNames[2]="9-13";
-		columnNames[3]="13-17";
-		columnNames[4]="17-19";
-		columnNames[5]="19-21";
-		columnNames[6]="";
-		columnNames[7]="";
+		for (int i = 1; i <= sysDate.size(); i++) {
+			columnNames[i]=sysDate.get(i-1);//.split("\\(")[0];
+		}
 		
-		final JTable table = new JTable(rowData,columnNames);
+		final Jtable table = new Jtable(rowData,columnNames);
 		table.getColumnModel().getColumn(0).setPreferredWidth(90);
-		table.getColumnModel().getColumn(1).setPreferredWidth(90);
-		table.getColumnModel().getColumn(2).setPreferredWidth(90);
-		table.getColumnModel().getColumn(3).setPreferredWidth(90);
-		table.getColumnModel().getColumn(4).setPreferredWidth(90);
-		table.getColumnModel().getColumn(5).setPreferredWidth(90);
-		table.getColumnModel().getColumn(6).setPreferredWidth(90);
-		table.getColumnModel().getColumn(7).setPreferredWidth(90);
+		table.getColumnModel().getColumn(1).setPreferredWidth(120);
+		table.getColumnModel().getColumn(2).setPreferredWidth(120);
+		table.getColumnModel().getColumn(3).setPreferredWidth(120);
+		table.getColumnModel().getColumn(4).setPreferredWidth(120);
+		table.getColumnModel().getColumn(5).setPreferredWidth(120);
+		table.getColumnModel().getColumn(6).setPreferredWidth(120);
+		table.getColumnModel().getColumn(7).setPreferredWidth(120);
 //		FitTableColumns(table);
 		this.add(table);
+		
 		table.addMouseListener(new MouseListener() {
 			
 			@Override
@@ -122,7 +129,21 @@ public class Frame extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				// TODO Auto-generated method stub
+				TableModel tableModel = table.getModel();
 				
+				int[] row = table.getSelectedRows();
+				int[] column = table.getSelectedColumns();
+				
+				String val = table.getValueAt(row[0], column[0]).toString();
+				String tempVal = null;
+				if(val == null || val.length() == 0 ){
+					log.debug("改变表格参数失败!!!");
+					return;
+				}
+				tempVal = val.equals("需要") ? "不需要" : "需要";
+				tableModel.setValueAt(tempVal, row[0], column[0]);
+				
+				TableColumnModel tcm = table.getColumnModel();
 			}
 			
 			@Override
@@ -141,12 +162,30 @@ public class Frame extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 				// TODO Auto-generated method stub
 				log.debug("选中行-->"+table.getSelectedRow());
-				int[] a = table.getSelectedRows();
-//				log.debug(a.length);
-				log.debug("行--->"+a[0]);
-				log.debug("行值"+table.getColumnName(a[0]));
+				int[] row = table.getSelectedRows();
+				int[] column = table.getSelectedColumns();
+				String checkColumn = table.getColumnName(column[0]);
+				
+				String checkRow = row[0]+"-"+table.getValueAt(row[0], 0);
+				
+				log.debug("列"+column[0]+"值"+checkColumn);
+				log.debug("行"+row[0]+"值"+checkRow);
+				
+				if(checkColumn == null || checkRow == null){
+					log.debug("选择日期不能为空!!!");
+					return;
+				}
+				
+				Set<String> userTime = userDate.get(checkColumn);
+				if(userTime != null){
+					userTime.add(checkRow);
+				}
+				userTime = new HashSet<String>();
+				userTime.add(checkRow);
+				userDate.put(checkColumn, userTime);
 				
 			}
+			
 		});
 		
 //		init();
@@ -198,6 +237,14 @@ public class Frame extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
+				
+				if(userDate == null || userDate.size() == 0){
+//					JOptionPane.showMessageDialog(null, "正在尝试", "test", JOptionPane.WARNING_MESSAGE);
+					JOptionPane.showMessageDialog(null,"请选择约车日期!!!","提示 ",JOptionPane.WARNING_MESSAGE);
+					log.debug("请选择约车日期!!!");
+					return;
+				}
+				
 				log.debug("账号-->" + user.getText());
 				log.debug("密码-->" + pwd.getText());
 				log.debug("验证码-->" + code.getText());
@@ -231,7 +278,7 @@ public class Frame extends JFrame {
 					// 查询可约车辆
 					while(true){
 						try {
-							Thread.sleep(3000);
+							Thread.sleep(1000);
 						} catch (Exception e2) {
 							log.error("定时器出问题!!!",e2);
 							// TODO: handle exception
@@ -246,7 +293,7 @@ public class Frame extends JFrame {
 			}
 		});
 		this.add(submit);
-		// this.add(validCode);//上面验证码只需请求即可不用显示
+//		 this.add(validCode);//上面验证码只需请求即可不用显示
 
 //		Dimension di = new Dimension();
 //		di.height = 25;
@@ -293,54 +340,7 @@ public class Frame extends JFrame {
 			e.printStackTrace();
 		}
 	}
-
-	public Map<String, Set<String>> appoint() {
-		// 获取用户指定时间
-		Map<String, Set<String>> date = new HashMap<String, Set<String>>();
-		Set<String> time = new HashSet<String>();
-		time.add("2");// ,9-13
-		time.add("3");// ,13-17
-		time.add("4");// ,17-19
-		time.add("5");// ,19-21
-		date.put("2015-05-31(星期日)", time);
-		
-		Set<String> time1 = new HashSet<String>();
-		time1.add("2");// ,9-13
-		time1.add("3");// ,13-17
-		time1.add("4");// ,17-19
-		time1.add("5");// ,19-21
-		date.put("2015-05-28(星期四)", time1);
-		
-		Set<String> time2 = new HashSet<String>();
-		time2.add("2");// ,9-13
-		time2.add("3");// ,13-17
-		time2.add("4");// ,17-19
-		time2.add("5");// ,19-21
-		date.put("2015-05-29(星期五)", time2);
-		
-		Set<String> time3 = new HashSet<String>();
-		time3.add("2");// ,9-13
-		time3.add("3");// ,13-17
-		time3.add("4");// ,17-19
-		time3.add("5");// ,19-21
-		date.put("2015-05-30(星期六)", time3);
-		
-		Set<String> time4 = new HashSet<String>();
-		time4.add("2");// ,9-13
-		time4.add("3");// ,13-17
-		time4.add("4");// ,17-19
-		time4.add("5");// ,19-21
-		date.put("2015-06-01(星期一)", time4);
-		
-		Set<String> time5 = new HashSet<String>();
-		time5.add("2");// ,9-13
-		time5.add("3");// ,13-17
-		time5.add("4");// ,17-19
-		time5.add("5");// ,19-21
-		date.put("2015-06-02(星期二)", time5);
-		return date;
-	}
-
+	
 	/**
 	 * 约车信息
 	 */
@@ -371,21 +371,19 @@ public class Frame extends JFrame {
 			
 			Map<String, String>[] carResult = mapper.readValue(yuecheArray[2],Map[].class);
 
-			Map<String, Set<String>> userDate = appoint();
-
 			Set<String> userDateSet = userDate.keySet();// 获取用户所有日期
 
 			for (Map<String, String> map : carResult) {
-				String sDate = map.get("fchrdate");
-				if (!userDateSet.contains(sDate)) {
+				String queryDate = map.get("fchrdate");
+				if (!userDateSet.contains(queryDate)) {
 					continue;
 				}
 				// 用户指定时间
-				Set<String> userTimeSet = userDate.get(sDate);
-				for (String str : userTimeSet) {
+				Set<String> userTimeSet = userDate.get(queryDate);
+				for (String time : userTimeSet) {
 
-					String yueCheVal = map.get(str);
-					log.debug("传入yueche参数"+str);
+					String yueCheVal = map.get(time.split("-")[0]);
+					log.debug("传入yueche参数"+time);
 					log.debug("约车---->" + yueCheVal);
 					// 根据显示值判断是否已经越过车（越过车显示车号，没有“/”符号）
 					if (!yueCheVal.contains("/")) {
@@ -393,11 +391,11 @@ public class Frame extends JFrame {
 					}
 					String[] valArray = yueCheVal.split("\\/");
 					if (valArray[1].equalsIgnoreCase("0")) {
-						log.debug("不可约车-->" + sDate + "-->" + valArray[0]);
+						log.debug("不可约车-->" + queryDate + "-->" + valArray[0]);
 						continue;
 					};
 					
-					yueche(sDate,str);
+					yueche(queryDate,time);
 				}
 			}
 		} catch (Exception e) {
@@ -438,7 +436,7 @@ public class Frame extends JFrame {
 	 * @throws Exception
 	 */
 	int threadCount = 0;
-	public void yueche(String sDate, String time) {
+	public void yueche(String date, String time) {
 		Map<String, String> yueCheParam = new HashMap<String, String>();
 		yueCheParam.put("loginType", "2");
 		yueCheParam.put("method", "yueche");
@@ -458,17 +456,18 @@ public class Frame extends JFrame {
 		yueCheParam.put("ReleaseCarID", "");
 		yueCheParam.put("ValidCode", code.getText());
 		yueCheParam.put("Cookie", cookie);
-		yueCheParam.put("date", sDate.split("\\(")[0]);
-		Map<String,String> map = new HashMap<String, String>();
-		map.put("1", "7-9");
-		map.put("2", "9-13");
-		map.put("3", "13-17");
-		map.put("4", "17-19");
-		map.put("5", "19-21");
-		yueCheParam.put("start", map.get(time).split("-")[0]);// 开始时间
-		yueCheParam.put("end", map.get(time).split("-")[1]);// 结束时间
+		yueCheParam.put("date", date.split("\\(")[0]);
+//		Map<String,String> map = new HashMap<String, String>();
+//		map.put("1", "7-9");
+//		map.put("2", "9-13");
+//		map.put("3", "13-17");
+//		map.put("4", "17-19");
+//		map.put("5", "19-21");
+		String[] array = time.split("-");
+		yueCheParam.put("start", array[1]);// 开始时间
+		yueCheParam.put("end", array[2]);// 结束时间
 		
-		yueCheParam.put("trainsessionid", "0"+time);
+		yueCheParam.put("trainsessionid", "0"+array[0]);
 		try {
 			int count = 0;
 			while(count < 2){
@@ -487,6 +486,10 @@ public class Frame extends JFrame {
 //		tp.start();
 	}
 	
+	/**
+	 * 获取当天之后的七天时间
+	 * @return List<String>
+	 */
 	public List<String> getDate(){
 		List<String> list = new ArrayList<String>();
 		for (int i = 0; i <= 6; i++) {
@@ -494,17 +497,21 @@ public class Frame extends JFrame {
 			int day = cal.get(Calendar.DAY_OF_MONTH);
 //			cal.add(Calendar.DATE, i);
 			cal.set(Calendar.DAY_OF_MONTH,day+i );
-			SimpleDateFormat dateFm = new SimpleDateFormat("MM-dd(EEEE)");
+			SimpleDateFormat dateFm = new SimpleDateFormat("yyyy-MM-dd(EEEE)");
 			list.add(dateFm.format(cal.getTime()));
 		}
 		return list;
 	}
 	
+	/**
+	 * 自动适应 table 表格
+	 * @param myTable
+	 */
 	public void FitTableColumns(JTable myTable){
 		  JTableHeader header = myTable.getTableHeader();
 		     int rowCount = myTable.getRowCount();
-
-		     Enumeration columns = myTable.getColumnModel().getColumns();
+		     
+		     Enumeration<TableColumn> columns = myTable.getColumnModel().getColumns();
 		     while(columns.hasMoreElements()){
 		         TableColumn column = (TableColumn)columns.nextElement();
 		         int col = header.getColumnModel().getColumnIndex(column.getIdentifier());

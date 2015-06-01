@@ -67,7 +67,7 @@ public class test {
 	@Test
 	public void splitTest1() {
 		Frame f = new Frame();
-		Map<String, Set<String>> map = f.appoint();
+		Map<String, Set<String>> map = null;//f.appoint();
 		log.debug("Map大小--->" + map.size());
 		Set<Entry<String, Set<String>>> set = map.entrySet();
 		for (Entry<String, Set<String>> entry : set) {
@@ -173,6 +173,9 @@ public class test {
 		for (int i = 0; i < t.length; i++) {
 			log.debug(t[i].length);
 		}
+		
+		Map<String,String> map = new HashMap<String, String>();
+		log.debug("map--->"+map.size());
 	}
 	
 	public static void main(String a[]){
