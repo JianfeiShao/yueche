@@ -1,12 +1,15 @@
 package com.zht.main;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,16 +27,17 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.sun.java.swing.plaf.windows.resources.windows;
 import com.zht.entity.Stu;
 import com.zht.entity.StuInfo;
 import com.zht.froms.Jtable;
@@ -72,7 +76,20 @@ public class Frame extends JFrame {
 	
 	Map<String, Set<String>> userDate = new HashMap<String, Set<String>>();
 	
+	JPanel panel = new JPanel();
+	
+	JButton submit = new JButton("登录");
+	
 	public Frame() {
+		panel.setBackground(Color.RED);
+		this.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				// TODO Auto-generated method stub
+				super.windowClosing(e);
+			}
+		});
+		
 		log.debug(sysDate.size());
 		//填充表现
 		final String[][] rowData = new String[6][8];
@@ -142,8 +159,8 @@ public class Frame extends JFrame {
 				}
 				tempVal = val.equals("需要") ? "不需要" : "需要";
 				tableModel.setValueAt(tempVal, row[0], column[0]);
-				
-				TableColumnModel tcm = table.getColumnModel();
+//				TableCellRenderer tcr = table.getCellRenderer(row[0], column[0]);
+//				tcr.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 			}
 			
 			@Override
@@ -164,6 +181,7 @@ public class Frame extends JFrame {
 				log.debug("选中行-->"+table.getSelectedRow());
 				int[] row = table.getSelectedRows();
 				int[] column = table.getSelectedColumns();
+				
 				String checkColumn = table.getColumnName(column[0]);
 				
 				String checkRow = row[0]+"-"+table.getValueAt(row[0], 0);
@@ -177,10 +195,15 @@ public class Frame extends JFrame {
 				}
 				
 				Set<String> userTime = userDate.get(checkColumn);
-				if(userTime != null){
-					userTime.add(checkRow);
+				if(userTime!=null){
+					if(userTime.contains(checkRow)){
+						userTime.remove(checkRow);
+						return;
+					}
 				}
-				userTime = new HashSet<String>();
+				if(userTime == null){
+					userTime = new HashSet<String>();
+				}
 				userTime.add(checkRow);
 				userDate.put(checkColumn, userTime);
 				
@@ -204,24 +227,13 @@ public class Frame extends JFrame {
 			}
 		});
 		this.add(label);
-
+		
 		// Dimension dimension = new Dimension();
 		// dimension.height = 20;
 		// dimension.width = 100;
 		// textCode.setPreferredSize(dimension);
 		code.setText("输入验证码");
 		this.add(code);
-
-		// JButton enter = new JButton("确认");
-		// enter.addActionListener(new ActionListener() {
-		//
-		// @Override
-		// public void actionPerformed(ActionEvent e) {
-		// // TODO Auto-generated method stub
-		// System.out.println("有动作");
-		// }
-		// });
-		// this.add(enter);
 
 		final TextField user = new TextField();
 		user.setText("11099677");
@@ -230,9 +242,7 @@ public class Frame extends JFrame {
 		pwd.setText("05040");
 		this.add(user);
 		this.add(pwd);
-
-		JButton submit = new JButton("登录");
-
+		
 		submit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -267,6 +277,10 @@ public class Frame extends JFrame {
 						log.debug("获取信息失败");
 						return;
 					}
+					
+					submit.setText("退出");
+					panel.setBackground(Color.GREEN);
+					
 					ObjectMapper mapper = new ObjectMapper();
 					stu = mapper.readValue(jsonStuInfo, Stu[].class)[0];
 					log.debug("name-->" + stu.getFchrStudentName());
@@ -276,16 +290,23 @@ public class Frame extends JFrame {
 					// 获取个人约车信息
 					stu();
 					// 查询可约车辆
-					while(true){
-						try {
-							Thread.sleep(1000);
-						} catch (Exception e2) {
-							log.error("定时器出问题!!!",e2);
-							// TODO: handle exception
+					Thread thread = new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							// TODO Auto-generated method stub
+							while(true){
+								try {
+									browser();
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+									log.debug("查询可用车辆错误!!!");
+								}
+							}
 						}
-						browser();
-					}
-
+					});
+					thread.start();
 				} catch (Exception e1) {
 					log.debug("登录失败,出现异常",e1);
 					e1.printStackTrace();
@@ -293,6 +314,7 @@ public class Frame extends JFrame {
 			}
 		});
 		this.add(submit);
+		this.add(panel);
 //		 this.add(validCode);//上面验证码只需请求即可不用显示
 
 //		Dimension di = new Dimension();
@@ -394,16 +416,16 @@ public class Frame extends JFrame {
 						log.debug("不可约车-->" + queryDate + "-->" + valArray[0]);
 						continue;
 					};
-					
 					yueche(queryDate,time);
 				}
 			}
 		} catch (Exception e) {
 			log.debug("查询可约车辆有误！！！",e);
 			e.printStackTrace();
+			panel.setBackground(Color.RED);
 		}
 	}
-
+	
 	/**
 	 * 用户约车信息(里面有约车令牌)
 	 */
