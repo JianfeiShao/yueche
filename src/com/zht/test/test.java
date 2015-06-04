@@ -198,5 +198,16 @@ public class test {
 		frame.setVisible(true);
 		
 	}
+	
+	@Test
+	public void logSize(){
+		while(true){
+			try {
+				int a = 10/0;
+			} catch (Exception e) {
+				log.debug("===>",e);
+			}
+		}
+	}
 
 }

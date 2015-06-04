@@ -37,7 +37,6 @@ import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.sun.java.swing.plaf.windows.resources.windows;
 import com.zht.entity.Stu;
 import com.zht.entity.StuInfo;
 import com.zht.froms.Jtable;
@@ -375,6 +374,7 @@ public class Frame extends JFrame {
 		param.put("ValidCode", vc);
 		param.put("Cookie", cookie);
 		try {
+			
 			String yuecheCase = url.browser(param);
 
 			log.debug("约车情况-->" + yuecheCase);
