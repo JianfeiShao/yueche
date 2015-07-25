@@ -1,5 +1,6 @@
 package com.zht.test;
 
+import java.awt.Frame;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -24,7 +25,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.zht.entity.StuInfo;
-import com.zht.main.Frame;
 
 public class test {
 	private Logger log = null;
@@ -34,6 +34,10 @@ public class test {
 		log = Logger.getLogger("TestMethod");
 	}
 
+	@Test
+	public void cannotbecastto(){
+		System.out.println(Integer.parseInt("2222"));
+	}
 	@Test
 	public void splitTest() {
 		String su = "aaaaa||test||xxxxxx||eeee|";

@@ -1,0 +1,2 @@
+下载这个运行环境安装
+http://dl.cr173.com/soft1/jre6.zip
